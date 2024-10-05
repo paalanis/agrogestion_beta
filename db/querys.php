@@ -1,7 +1,5 @@
 <?php
-#include '../../conexion/conexion.php';
 
-#$conexion = conectarServidor();
 $id_finca = $_SESSION['id_finca_usuario'];
 $inicioCampania = '2024-06-01';
 $idCampania = 1;
@@ -466,7 +464,7 @@ function calculaPrespuestado()
                                     tb_presupuesto_original.mes AS mes, 
                                     tb_presupuesto_original.anio AS anio,
                                     tb_labor.nombre AS labor, 
-                                    IF(tb_labor.id_unidad = 19,ROUND(SUM(tb_presupuesto_original.aplicacion)/8,3),ROUND(SUM(tb_presupuesto_original.aplicacion),2)) AS valoresPresupuestado,
+                                    ROUND(SUM(tb_presupuesto_original.aplicacion),2) AS valoresPresupuestado,
                                     tb_unidad.nombre AS unidadMedida
                                 FROM
                                     tb_presupuesto_original

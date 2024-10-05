@@ -1,6 +1,9 @@
 <?php
 session_start();
+include '../../conexion/conexion.php';
+include '../querys/filtros.php';
 include '../querys/presupuesto.php';
+$conexion = conectarServidor();
 ?>
 
 
@@ -13,7 +16,7 @@ include '../querys/presupuesto.php';
 
         <div class="x_panel">
           <div class="x_title">
-            <h2>Control ejecutado <small>Agrupa por mes lo ejecutado</small></h2>
+            <h2>Ejecutado <small>Reporte ejecutado</small></h2>
             <div class="clearfix"></div>
           </div>
 
@@ -23,30 +26,10 @@ include '../querys/presupuesto.php';
             <form class="form-horizontal" id="formulario_reporte" role="form" method="post" action="abm/reporte/excel_controlPresupuestario.php">
 
               <div class="well" style="overflow: auto">
-                <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="col-md-2 col-sm-4 col-xs-12">
                   <fieldset>
                     <select class="form-control col-md-7 col-xs-12" name="dato_mesInicio" id="dato_mesInicio">
-                      <option value="">Mes inicio</option>
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="3">3</option>
-                      <option value="4">4</option>
-                      <option value="5">5</option>
-                      <option value="6">6</option>
-                      <option value="7">7</option>
-                      <option value="8">8</option>
-                      <option value="9">9</option>
-                      <option value="10">10</option>
-                      <option value="11">11</option>
-                      <option value="12">12</option>
-                    </select>
-                  </fieldset>
-                </div>
-                
-                <div class="col-md-4 col-sm-4 col-xs-12">
-                  <fieldset>
-                    <select class="form-control col-md-7 col-xs-12" name="dato_mesFin" id="dato_mesFin">
-                      <option value="">Mes fin</option>
+                      <option value="0">Mes inicio</option>
                       <option value="1">1</option>
                       <option value="2">2</option>
                       <option value="3">3</option>
@@ -63,10 +46,46 @@ include '../querys/presupuesto.php';
                   </fieldset>
                 </div>
 
-                <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="col-md-2 col-sm-4 col-xs-12">
+                  <fieldset>
+                    <select class="form-control col-md-7 col-xs-12" name="dato_mesFin" id="dato_mesFin">
+                      <option value="0">Mes fin</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5">5</option>
+                      <option value="6">6</option>
+                      <option value="7">7</option>
+                      <option value="8">8</option>
+                      <option value="9">9</option>
+                      <option value="10">10</option>
+                      <option value="11">11</option>
+                      <option value="12">12</option>
+                    </select>
+                  </fieldset>
+                </div>
+
+                <div class="col-md-5 col-sm-3 col-xs-12">
+                  <fieldset>
+                    <select class="form-control col-md-7 col-xs-12" name="dato_labor" id="dato_labor">
+                      <option value="0">Labores</option>
+                      <?php
+                      $rslabores = queryLabores(false);
+                      while ($sql_labores = mysqli_fetch_array($rslabores)) {
+                        $idlabores = $sql_labores['id'];
+                        $labores = $sql_labores['nombre'];
+                        echo utf8_encode('<option value=' . $idlabores . '>' . $labores . '</option>');
+                      }
+                      ?>
+                    </select>
+                  </fieldset>
+                </div>
+
+                <div class="col-md-3 col-sm-4 col-xs-12">
                   <fieldset>
                     <select class="form-control col-md-7 col-xs-12" name="dato_campania" id="dato_campania">
-                      <option value="">Campaña</option>
+                      <option value="0">Campaña</option>
                       <?php
                       $rscampania = queryCampania();
                       while ($sql_campania = mysqli_fetch_array($rscampania)) {

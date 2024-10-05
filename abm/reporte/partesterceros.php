@@ -35,7 +35,6 @@ $conexion = conectarServidor();
                             <th>Jor x Ha </th>
                             <th>Obs </th>
                             <th>Obs Gral </th>
-                            </th>
                            </tr>
                         </thead>
 

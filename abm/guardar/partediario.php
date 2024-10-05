@@ -1,188 +1,180 @@
-<?php 
+<?php
 session_start();
 if (!isset($_SESSION['usuario'])) {
-header("Location: ../../index.php");
+	header("Location: ../../index.php");
 }
 if ($_SESSION['id_finca_usuario'] == '0') {
-session_destroy();
-header("Location: ../../index.php");
+	session_destroy();
+	header("Location: ../../index.php");
 }
-$deposito=$_SESSION['deposito'];
+$idCampania = 1;
+$deposito = $_SESSION['deposito'];
 include '../../conexion/conexion.php';
 $conexion = conectarServidor();
 
 if (mysqli_connect_errno()) {
-	$array=array('success'=>'false');
+	$array = array('success' => 'false');
 	echo json_encode($array);
 	exit();
-}else{
+} else {
 	date_default_timezone_set("America/Argentina/Mendoza");
-	$id_global = date("Ymdhis");	
+	$id_global = date("Ymdhis");
 
-	$personal=$_REQUEST['dato_personal'];
-	$fecha=$_REQUEST['dato_fecha'];
-	$finca=$_REQUEST['dato_finca'];
-	$labor=$_REQUEST['dato_labor'];
-	$obs_labor=utf8_decode($_REQUEST['dato_obslabor']);
-	$tractor=$_REQUEST['dato_tractor'];
-	$implemento=$_REQUEST['dato_implemento'];
-	$hora_t=$_REQUEST['dato_calculo'];
-	$horas=$_REQUEST['dato_horas'];
-	
-	$obs_general=utf8_decode($_REQUEST['dato_obsgeneral']);
+	$personal = $_REQUEST['dato_personal'];
+	$fecha = $_REQUEST['dato_fecha'];
+	$finca = $_REQUEST['dato_finca'];
+	$labor = $_REQUEST['dato_labor'];
+	$obs_labor = utf8_decode($_REQUEST['dato_obslabor']);
+	$tractor = $_REQUEST['dato_tractor'];
+	$implemento = $_REQUEST['dato_implemento'];
+	$hora_t = $_REQUEST['dato_calculo'];
+	$horas = $_REQUEST['dato_horas'];
+	$tipoLabor = $_REQUEST['dato_tipoLabor'];
 
-	$totalhas=$_REQUEST['dato_totalhas'];
+	$obs_general = $_REQUEST['dato_obsgeneral'];
 
-	$idinicial=$_REQUEST['dato_idinicial']; // id inicial de cuarteles
-	$idfinal=$_REQUEST['dato_idfinal'];
+	$totalhas = $_REQUEST['dato_totalhas'];
+
+	$idinicial = $_REQUEST['dato_idinicial']; // id inicial de cuarteles
+	$idfinal = $_REQUEST['dato_idfinal'];
 
 	if ($totalhas == 0) {
 
-		mysqli_select_db($conexion,'$database');
-		$sql = "INSERT INTO tb_parte_diario (id_finca, id_personal, fecha, horas_trabajadas, obs_general, id_cuartel, has, obs_labor, id_labor, id_parte_diario_global, id_tractor, horas_tractor, id_implemento)
-		VALUES ('$finca', '$personal', '$fecha', '$horas', '$obs_general', '0', '0', '$obs_labor', '$labor', '$id_global', '$tractor', '$hora_t', '$implemento')";
-		mysqli_query($conexion,$sql);
+		mysqli_select_db($conexion, '$database');
+		$sql = "INSERT INTO tb_parte_diario (id_finca, id_personal, fecha, horas_trabajadas, obs_general, id_cuartel, has, obs_labor, id_labor, id_parte_diario_global, id_tractor, horas_tractor, id_implemento, id_campania, tipo_labor)
+		VALUES ('$finca', '$personal', '$fecha', '$horas', '$obs_general', '0', '0', '$obs_labor', '$labor', '$id_global', '$tractor', '$hora_t', '$implemento','$idCampania','$tipoLabor')";
+		mysqli_query($conexion, $sql);
 
-			$sqlinsumos = "SELECT
-							tb_consumo_insumos_".$deposito.".id_insumo AS id,
-							tb_consumo_insumos_".$deposito.".egreso AS cantidad
+		$sqlinsumos = "SELECT
+							tb_consumo_insumos_" . $deposito . ".id_insumo AS id,
+							tb_consumo_insumos_" . $deposito . ".egreso AS cantidad
 							FROM
-							tb_consumo_insumos_".$deposito."
+							tb_consumo_insumos_" . $deposito . "
 							WHERE
-							tb_consumo_insumos_".$deposito.".estado = '0'
+							tb_consumo_insumos_" . $deposito . ".estado = '0'
 							ORDER BY
-							tb_consumo_insumos_".$deposito.".id_consumo_insumos ASC";
-		    $rsinsumos = mysqli_query($conexion, $sqlinsumos);
-		    
-		    $filas =  mysqli_num_rows($rsinsumos);
+							tb_consumo_insumos_" . $deposito . ".id_consumo_insumos ASC";
+		$rsinsumos = mysqli_query($conexion, $sqlinsumos);
 
-		    if ($filas > 0) { // si existen insumos con de esa finca se muestran, de lo contrario queda en blanco  
-		   
-		    	
-		        while ($datos = mysqli_fetch_array($rsinsumos)){ //
-		       
-			        $cantidad=utf8_encode($datos['cantidad']);
-			        $id=utf8_encode($datos['id']);
-    			
-					mysqli_select_db($conexion,'$database');
-					$sql = "INSERT INTO tb_insumo_proporcional_".$deposito." (id_insumo, id_cuartel, id_labor, proporcion, fecha, id_parte_diario_global)
+		$filas =  mysqli_num_rows($rsinsumos);
+
+		if ($filas > 0) { // si existen insumos con de esa finca se muestran, de lo contrario queda en blanco  
+
+
+			while ($datos = mysqli_fetch_array($rsinsumos)) { //
+
+				$cantidad = utf8_encode($datos['cantidad']);
+				$id = utf8_encode($datos['id']);
+
+				mysqli_select_db($conexion, '$database');
+				$sql = "INSERT INTO tb_insumo_proporcional_" . $deposito . " (id_insumo, id_cuartel, id_labor, proporcion, fecha, id_parte_diario_global)
 					VALUES ('$id', '0', '$labor', '$cantidad', '$fecha', '$id_global')";
-					mysqli_query($conexion,$sql); 	
-		    					   
-		    	} // fin while
+				mysqli_query($conexion, $sql);
+			} // fin while
 
-		    	mysqli_select_db($conexion,'$database');
-				$sqlagregaparte = "UPDATE tb_consumo_insumos_".$deposito."
-						   SET tb_consumo_insumos_".$deposito.".id_parte_diario_global = '$id_global'
-						   WHERE tb_consumo_insumos_".$deposito.".estado = '0'"; 
-				mysqli_query($conexion, $sqlagregaparte);
+			mysqli_select_db($conexion, '$database');
+			$sqlagregaparte = "UPDATE tb_consumo_insumos_" . $deposito . "
+						   SET tb_consumo_insumos_" . $deposito . ".id_parte_diario_global = '$id_global'
+						   WHERE tb_consumo_insumos_" . $deposito . ".estado = '0'";
+			mysqli_query($conexion, $sqlagregaparte);
 
-		    	mysqli_select_db($conexion,'$database');
-				$sqlinsumo = "UPDATE tb_consumo_insumos_".$deposito." SET tb_consumo_insumos_".$deposito.".estado = '1' WHERE tb_consumo_insumos_".$deposito.".estado = '0'"; 
-				mysqli_query($conexion, $sqlinsumo);
+			mysqli_select_db($conexion, '$database');
+			$sqlinsumo = "UPDATE tb_consumo_insumos_" . $deposito . " SET tb_consumo_insumos_" . $deposito . ".estado = '1' WHERE tb_consumo_insumos_" . $deposito . ".estado = '0'";
+			mysqli_query($conexion, $sqlinsumo);
 
-				$array=array('success'=>'true');
+			$array = array('success' => 'true');
 			echo json_encode($array);
-			
-		    }else{
+		} else {
 
-		    	$array=array('success'=>'true');
+			$array = array('success' => 'true');
 			echo json_encode($array);
+		}
+	} else {
 
-		    }		
+		$coef_horas = $horas / $totalhas;
+		$coef_horas_t = $hora_t / $totalhas;
 
-	}else{
+		for ($i = $idinicial; $i <= $idfinal; $i++) {
 
-			$coef_horas = $horas/$totalhas;
-			$coef_horas_t = $hora_t/$totalhas;
+			$cuartel = $_GET['dato_' . $i . ''];
+			$has = $_GET['dato_has-seleccionadas' . $i . ''];
 
-			for ($i=$idinicial; $i <=$idfinal ; $i++) { 
+			$hectareas['' . $i . ''] = '' . $has . '';
+			$cuarteles['' . $i . ''] = '' . $cuartel . '';
 
-				$cuartel=$_GET['dato_'.$i.''];
-				$has=$_GET['dato_has-seleccionadas'.$i.''];
+			if ($has == 0)
+				continue;
 
-				$hectareas[''.$i.''] = ''.$has.'';
-				$cuarteles[''.$i.''] = ''.$cuartel.'';
+			$horas_proporcional = $has * $coef_horas;
+			$horas_proporcional_t = $has * $coef_horas_t;
 
-				if ($has == 0)
-				        continue;
+			mysqli_select_db($conexion, '$database');
+			$sql = "INSERT INTO tb_parte_diario (id_finca, id_personal, fecha, horas_trabajadas, obs_general, id_cuartel, has, obs_labor, id_labor, id_parte_diario_global, id_tractor, horas_tractor, id_implemento, id_campania, tipo_labor)
+				VALUES ('$finca', '$personal', '$fecha', '$horas_proporcional', '$obs_general', '$cuartel', '$has', '$obs_labor', '$labor', '$id_global', '$tractor', '$horas_proporcional_t', '$implemento', '$idCampania','$tipoLabor')";
+			mysqli_query($conexion, $sql);
+		}
 
-				    $horas_proporcional = $has * $coef_horas;
-				    $horas_proporcional_t = $has * $coef_horas_t;
-				
-				mysqli_select_db($conexion,'$database');
-				$sql = "INSERT INTO tb_parte_diario (id_finca, id_personal, fecha, horas_trabajadas, obs_general, id_cuartel, has, obs_labor, id_labor, id_parte_diario_global, id_tractor, horas_tractor, id_implemento)
-				VALUES ('$finca', '$personal', '$fecha', '$horas_proporcional', '$obs_general', '$cuartel', '$has', '$obs_labor', '$labor', '$id_global', '$tractor', '$horas_proporcional_t', '$implemento')";
-				mysqli_query($conexion,$sql);    
-
-			}
-
-			$sqlinsumos = "SELECT
-							tb_consumo_insumos_".$deposito.".id_insumo AS id,
-							tb_consumo_insumos_".$deposito.".egreso AS cantidad
+		$sqlinsumos = "SELECT
+							tb_consumo_insumos_" . $deposito . ".id_insumo AS id,
+							tb_consumo_insumos_" . $deposito . ".egreso AS cantidad
 							FROM
-							tb_consumo_insumos_".$deposito."
+							tb_consumo_insumos_" . $deposito . "
 							WHERE
-							tb_consumo_insumos_".$deposito.".estado = '0'
+							tb_consumo_insumos_" . $deposito . ".estado = '0'
 							ORDER BY
-							tb_consumo_insumos_".$deposito.".id_consumo_insumos ASC";
-		    $rsinsumos = mysqli_query($conexion, $sqlinsumos);
-		    
-		    $filas =  mysqli_num_rows($rsinsumos);
+							tb_consumo_insumos_" . $deposito . ".id_consumo_insumos ASC";
+		$rsinsumos = mysqli_query($conexion, $sqlinsumos);
 
-		    if ($filas > 0) { // si existen insumos con de esa finca se muestran, de lo contrario queda en blanco  
-		   
-		    	$contador = 0;
-		        while ($datos = mysqli_fetch_array($rsinsumos)){ //
-		       
-			        $cantidad=utf8_encode($datos['cantidad']);
-			        $id=utf8_encode($datos['id']);
-			        $contador++;
+		$filas =  mysqli_num_rows($rsinsumos);
 
-			            	for ($i=$idinicial; $i <= $idfinal; $i++) { 
-							
-								if ($hectareas[$i] == 0)
-					        	continue;
+		if ($filas > 0) { // si existen insumos con de esa finca se muestran, de lo contrario queda en blanco  
 
-								$proporcion = $cantidad/ $totalhas * $hectareas[$i];	
-								$idcuartel = $cuarteles[$i];
+			$contador = 0;
+			while ($datos = mysqli_fetch_array($rsinsumos)) { //
 
-								mysqli_select_db($conexion,'$database');
-								$sql = "INSERT INTO tb_insumo_proporcional_".$deposito." (id_insumo, id_cuartel, id_labor, proporcion, fecha, id_parte_diario_global)
+				$cantidad = utf8_encode($datos['cantidad']);
+				$id = utf8_encode($datos['id']);
+				$contador++;
+
+				for ($i = $idinicial; $i <= $idfinal; $i++) {
+
+					if ($hectareas[$i] == 0)
+						continue;
+
+					$proporcion = $cantidad / $totalhas * $hectareas[$i];
+					$idcuartel = $cuarteles[$i];
+
+					mysqli_select_db($conexion, '$database');
+					$sql = "INSERT INTO tb_insumo_proporcional_" . $deposito . " (id_insumo, id_cuartel, id_labor, proporcion, fecha, id_parte_diario_global)
 								VALUES ('$id', '$idcuartel', '$labor', '$proporcion', '$fecha', '$id_global')";
-								mysqli_query($conexion,$sql); 	
-					    		
-					        }
+					mysqli_query($conexion, $sql);
+				}
+			} // fin while
 
-				   
-		    	} // fin while
+			mysqli_select_db($conexion, '$database');
+			$sqlagregaparte = "UPDATE tb_consumo_insumos_" . $deposito . "
+						   SET tb_consumo_insumos_" . $deposito . ".id_parte_diario_global = '$id_global'
+						   WHERE tb_consumo_insumos_" . $deposito . ".estado = '0'";
+			mysqli_query($conexion, $sqlagregaparte);
 
-		    	mysqli_select_db($conexion,'$database');
-				$sqlagregaparte = "UPDATE tb_consumo_insumos_".$deposito."
-						   SET tb_consumo_insumos_".$deposito.".id_parte_diario_global = '$id_global'
-						   WHERE tb_consumo_insumos_".$deposito.".estado = '0'"; 
-				mysqli_query($conexion, $sqlagregaparte);
+			mysqli_select_db($conexion, '$database');
+			$sqlinsumo = "UPDATE tb_consumo_insumos_" . $deposito . " SET tb_consumo_insumos_" . $deposito . ".estado = '1' WHERE tb_consumo_insumos_" . $deposito . ".estado = '0'";
+			mysqli_query($conexion, $sqlinsumo);
 
-		    	mysqli_select_db($conexion,'$database');
-				$sqlinsumo = "UPDATE tb_consumo_insumos_".$deposito." SET tb_consumo_insumos_".$deposito.".estado = '1' WHERE tb_consumo_insumos_".$deposito.".estado = '0'"; 
-				mysqli_query($conexion, $sqlinsumo);
-
-				$array=array('success'=>'true');
+			$array = array('success' => 'true');
 			echo json_encode($array);
-			
-		    }else{
+		} else {
 
-		    	$array=array('success'=>'true');
+			$array = array('success' => 'true');
 			echo json_encode($array);
+		} // fin else filas 
 
-		    } // fin else filas 
-
-		 } // fin else has 0   
+	} // fin else has 0   
 
 } //fin else conexion
 
 // if ($control_txt == "ok") {
-	
+
 // 		mysqli_select_db($conexion,'$database');
 // 		$sql_txt_pd = "SELECT
 // 						tb_parte_diario.id_finca as id_finca,
@@ -203,7 +195,7 @@ if (mysqli_connect_errno()) {
 // 						WHERE
 // 						tb_parte_diario.id_parte_diario_global = '$id_global'"; 
 // 		$rs_sql_txt_pd = mysqli_query($conexion, $sql_txt_pd);
-		
+
 // 		$cantidad =  mysqli_num_rows($rs_sql_txt_pd);
 
 // 		if ($cantidad > 0) {
@@ -256,7 +248,7 @@ if (mysqli_connect_errno()) {
 // 		 // rename ("alta_finca.txt", "../../../../public_ftp/incoming/nuevos/alta_finca_".$id_global.".txt"); 
 
 // 		}
-		
+
 // 		mysqli_select_db($conexion,'$database');
 // 		$sql_txt_con_insu = "SELECT
 // 					tb_consumo_insumos_".$deposito.".id_insumo as id_insumo,
@@ -275,7 +267,7 @@ if (mysqli_connect_errno()) {
 // 					WHERE
 // 					tb_consumo_insumos_".$deposito.".id_parte_diario_global = '$id_global'"; 
 // 		$rs_sql_txt_con_insu = mysqli_query($conexion, $sql_txt_con_insu);
-		
+
 // 		$cantidad =  mysqli_num_rows($rs_sql_txt_con_insu);
 
 // 		if ($cantidad > 0) {
@@ -295,7 +287,7 @@ if (mysqli_connect_errno()) {
 // 				$saldo=$datos['saldo'];
 // 				$estado=$datos['estado'];
 // 				$obs=$datos['obs'];
-				
+
 // 			fwrite($file, $deposito);
 // 			fwrite($file, "~");	
 // 			fwrite($file, $id_insumo);
@@ -319,7 +311,7 @@ if (mysqli_connect_errno()) {
 // 			fwrite($file, $estado);
 // 			fwrite($file, "~");
 // 			fwrite($file, $obs.PHP_EOL);
-			
+
 // 		}
 // 			fclose($file);
 // 		 // rename ("alta_finca.txt", "../../../../public_ftp/incoming/nuevos/alta_finca_".$id_global.".txt"); 
@@ -340,7 +332,7 @@ if (mysqli_connect_errno()) {
 // 					tb_insumo_proporcional_".$deposito.".id_parte_diario_global = '$id_global'
 // 					"; 
 // 		$rs_sql_txt_con_insu_prop = mysqli_query($conexion, $sql_txt_con_insu_prop);
-		
+
 // 		$cantidad =  mysqli_num_rows($rs_sql_txt_con_insu_prop);
 
 // 		if ($cantidad > 0) {
@@ -355,7 +347,7 @@ if (mysqli_connect_errno()) {
 // 				$fecha=$datos['fecha'];
 // 				$proporcion=$datos['proporcion'];
 // 				$id_global2=$datos['id_global'];
-				
+
 // 			fwrite($file, $deposito);
 // 			fwrite($file, "~");	
 // 			fwrite($file, $id_insumo);
@@ -369,7 +361,7 @@ if (mysqli_connect_errno()) {
 // 			fwrite($file, $proporcion);
 // 			fwrite($file, "~");
 // 			fwrite($file, $id_global2.PHP_EOL);
-			
+
 // 		}
 // 			fclose($file);
 // 		 // rename ("alta_finca.txt", "../../../../public_ftp/incoming/nuevos/alta_finca_".$id_global.".txt"); 
@@ -380,5 +372,3 @@ if (mysqli_connect_errno()) {
 // 			echo json_encode($array);
 
 // }
-
-?>

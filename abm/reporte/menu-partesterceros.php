@@ -1,38 +1,12 @@
 <?php
 session_start();
-if (!isset($_SESSION['usuario'])) {
-header("Location: ../../index.php");
-}
-if ($_SESSION['id_finca_usuario'] == '0') {
-session_destroy();
-header("Location: ../../index.php");
-}
-$id_finca_usuario=$_SESSION['id_finca_usuario'];
-
 include '../../conexion/conexion.php';
+include '../querys/filtros.php';
 $conexion = conectarServidor();
 
 date_default_timezone_set("America/Argentina/Mendoza");
 $hoy = date("m-d-Y");
-$sqllabores = "SELECT
-tb_labor.id_labor as id,
-tb_labor.nombre as nombre
-FROM
-tb_labor
-ORDER BY
-tb_labor.nombre ASC";
-$rslabores = mysqli_query($conexion, $sqllabores); 
-$sqlpersonal = "SELECT
-tb_personal.id_personal AS id_personal,
-CONCAT(tb_personal.apellido, ', ',tb_personal.nombre) AS personal
-FROM
-tb_personal
-WHERE
-tb_personal.eventual = '1' and tb_personal.id_finca = '$id_finca_usuario'
-ORDER BY
-personal ASC";
-$rspersonal = mysqli_query($conexion, $sqlpersonal); 
-$cantidad =  mysqli_num_rows($rspersonal);
+
 ?>
 <div class="right_col" role="main" style="min-height: auto;">
 <div class="">
@@ -71,6 +45,7 @@ $cantidad =  mysqli_num_rows($rspersonal);
                       <select class="form-control col-md-7 col-xs-12" name="dato_labor" id="dato_labor">   
                         <option value="">Labores</option>
                         <?php
+                        $rslabores = queryLabores(false);
                         while ($sql_labores = mysqli_fetch_array($rslabores)){
                           $idlabores= $sql_labores['id'];
                           $labores = $sql_labores['nombre'];
@@ -86,14 +61,11 @@ $cantidad =  mysqli_num_rows($rspersonal);
                       <select class="form-control col-md-7 col-xs-12" name="dato_personal" id="dato_personal">   
                         <option value="">Personal</option>
                           <?php
-                          if ($cantidad > 0) { 
+                          $rspersonal = queryPersonal(false,'tercero');
                           while ($sql_personal = mysqli_fetch_array($rspersonal)){
-                            $idpersonal= $sql_personal['id_personal'];
-                            $personal = $sql_personal['personal'];
+                            $idpersonal= $sql_personal['id'];
+                            $personal = $sql_personal['nombre'];
                             echo utf8_encode('<option value='.$idpersonal.'>'.$personal.'</option>');
-                          }
-                          }else{
-                            echo utf8_encode('<option v>Sin personal</option>');
                           }
                           ?>
                       </select>

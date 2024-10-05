@@ -34,7 +34,6 @@ $conexion = conectarServidor();
                             <th>Has </th>
                             <th>Obs </th>
                             <th>Obs Gral </th>
-                            </th>
                            </tr>
                         </thead>
 

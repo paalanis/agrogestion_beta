@@ -7,21 +7,15 @@ if ($_SESSION['id_finca_usuario'] == '0') {
 session_destroy();
 header("Location: ../../index.php");
 }
-$deposito=$_SESSION['deposito'];
-$id_finca_usuario=$_SESSION['id_finca_usuario'];
 
 include '../../conexion/conexion.php';
 $conexion = conectarServidor();
 
-if (mysqli_connect_errno()) {
-printf("La conexión con el servidor de base de datos falló comuniquese con su administrador: %s\n", mysqli_connect_error());
-exit();
-}
 date_default_timezone_set("America/Argentina/Mendoza");
 $hoy = date("m-d-Y");
 
 mysqli_select_db($conexion,'$database');
-$sql = "DELETE FROM tb_consumo_insumos_".$deposito." WHERE estado = '0'";
+$sql = "DELETE FROM tb_consumo_insumos_".$_SESSION['deposito']." WHERE estado = '0'";
 mysqli_query($conexion,$sql);
 ?>
 <div class="right_col" role="main" style="min-height: auto;">

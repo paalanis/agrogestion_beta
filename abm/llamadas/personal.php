@@ -15,24 +15,24 @@ $seleccion=$_POST['seleccion'];
 
 if ($seleccion == '0'){
  $sqlpersonal = "SELECT
-                tb_personalNueva.id_personal as id_personal,
-                CONCAT(tb_personalNueva.apellido, ', ',tb_personalNueva.nombre) AS personal
+                tb_personalnueva.id_personal as id_personal,
+                CONCAT(tb_personalnueva.apellido, ', ',tb_personalnueva.nombre) AS personal
                 FROM
-                tb_personalNueva
+                tb_personalnueva
                 WHERE
-                tb_personalNueva.id_centro_costo = '$centroCosto'
+                tb_personalnueva.id_centro_costo = '$centroCosto'
                 ORDER BY
                 personal ASC";
  $rspersonal = mysqli_query($conexion, $sqlpersonal);}
 
 if ($seleccion == '1'){
   $sqlpersonal = "SELECT
-                 tb_personalNueva.id_personal as id_personal,
-                 CONCAT(tb_personalNueva.apellido, ', ',tb_personalNueva.nombre) AS personal
+                 tb_personalnueva.id_personal as id_personal,
+                 CONCAT(tb_personalnueva.apellido, ', ',tb_personalnueva.nombre) AS personal
                  FROM
-                 tb_personalNueva
+                 tb_personalnueva
                  WHERE
-                 tb_personalNueva.eventual = '$seleccion'
+                 tb_personalnueva.eventual = '$seleccion'
                  ORDER BY
                  personal ASC";
   $rspersonal = mysqli_query($conexion, $sqlpersonal);}

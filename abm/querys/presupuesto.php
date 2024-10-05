@@ -7,48 +7,26 @@ if ($_SESSION['id_finca_usuario'] == '0') {
     header("Location: ../../../index.php");
 }
 
-include '../../conexion/conexion.php';
-
 $id_finca = $_SESSION['id_finca_usuario'];
-$conexion = conectarServidor();
 
-
-function queryCampania(){
+function eliminarTabla($tabla)
+{
     global $conexion;
-
     try {
-        $query = "SELECT
-                    tb_campania.id_campania as id, 
-                    tb_campania.nombre as nombre
-                  FROM
-                    tb_campania
-                  ORDER BY
-                    tb_campania.nombre ASC";
-        $rs = mysqli_query($conexion, $query);
-
-        return $rs;
+        $queryEliminar = "DROP TABLE IF	EXISTS $tabla";
+        mysqli_query($conexion, $queryEliminar);
     } catch (Exception $e) {
         echo 'Message: ' . $e->getMessage();
     }
 }
 
-function eliminarTabla($tabla){
-    global $conexion;
-    try{
-        $queryEliminar = "DROP TABLE IF	EXISTS $tabla";
-        mysqli_query($conexion, $queryEliminar);
-    }
-    catch(Exception $e){
-        echo 'Message: ' .$e->getMessage();
-    }
-}
+function calculaEjecutado($mesInicio, $mesFin, $campania)
+{
+    global $conexion, $id_finca;
 
-function calculaEjecutado($mesInicio,$mesFin,$anio,$campania){
-    global $conexion,$id_finca;
-
-        eliminarTabla("tb_ejecutado");
-        try{
-            $query = "CREATE TABLE tb_ejecutado(id_ejecutado INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) AS
+    eliminarTabla("tb_ejecutado");
+    try {
+        $query = "CREATE TABLE tb_ejecutado(id_ejecutado INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) AS
                         SELECT
                             tb_parte_diario.id_labor AS id_labor,
                             MONTH(tb_parte_diario.fecha) AS mes, 
@@ -76,26 +54,25 @@ function calculaEjecutado($mesInicio,$mesFin,$anio,$campania){
                         ORDER BY
                             MONTH(tb_parte_diario.fecha) ASC,
                             id_labor ASC";
-            mysqli_query($conexion, $query);
-
-        }
-        catch(Exception $e){
-            echo 'Message: ' .$e->getMessage();
-        }        
+        mysqli_query($conexion, $query);
+    } catch (Exception $e) {
+        echo 'Message: ' . $e->getMessage();
+    }
 }
 
-function calculaPrespuestado($mesInicio,$mesFin,$anio,$campania){
-    global $conexion,$id_finca;
-    
-        eliminarTabla("tb_presupuestado");  
-        try{
-            $sqlEjecutado = "CREATE TABLE tb_presupuestado(id_presupuestado INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) AS
+function calculaPrespuestado($mesInicio, $mesFin, $campania)
+{
+    global $conexion, $id_finca;
+
+    eliminarTabla("tb_presupuestado");
+    try {
+        $sqlEjecutado = "CREATE TABLE tb_presupuestado(id_presupuestado INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) AS
                                 SELECT
                                     tb_presupuesto_original.id_labor AS id_labor,
                                     tb_presupuesto_original.mes AS mes, 
                                     tb_presupuesto_original.anio AS anio,
                                     tb_labor.nombre AS labor, 
-                                    IF(tb_labor.id_unidad = 19,ROUND(SUM(tb_presupuesto_original.aplicacion)/8,3),ROUND(SUM(tb_presupuesto_original.aplicacion),2)) AS valoresPresupuestado,
+                                    ROUND(SUM(tb_presupuesto_original.aplicacion),2) AS valoresPresupuestado,
                                     tb_unidad.nombre AS unidadMedida
                                 FROM
                                     tb_presupuesto_original
@@ -117,99 +94,152 @@ function calculaPrespuestado($mesInicio,$mesFin,$anio,$campania){
                                 ORDER BY
                                     tb_presupuesto_original.mes ASC,
                                     id_labor ASC";
-            mysqli_query($conexion, $sqlEjecutado);
-
-        }
-        catch(Exception $e){
-            echo 'Message: ' .$e->getMessage();
-        }        
+        mysqli_query($conexion, $sqlEjecutado);
+    } catch (Exception $e) {
+        echo 'Message: ' . $e->getMessage();
+    }
 }
 
-function calculaControlPrespuestario(){
-    global $conexion,$id_finca;
-    
-        eliminarTabla("tb_control_presupuestario");  
-        try{
-            $query =    "CREATE TABLE tb_control_presupuestario(
+function calculaControlPrespuestario()
+{
+    global $conexion, $id_finca;
+
+    eliminarTabla("tb_control_presupuestario");
+    try {
+        $query =    "CREATE TABLE tb_control_presupuestario(
                         id_control_presupuestario INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) AS
                         SELECT
+                        id_labor,
+                        mes,
+                        anio,
+                        labor AS labores,
+                        SUM( valoresPresupuestado ) AS total_presupuestado,
+                        SUM( valoresEjecutado ) AS total_ejecutado,
+                        ROUND( SUM( valoresPresupuestado ) - SUM( valoresEjecutado ), 2 ) AS diferencia,
+                        ROUND(
+                            IF
+                                (
+                                    SUM( valoresPresupuestado )> SUM( valoresEjecutado ),((
+                                            SUM( valoresPresupuestado )- SUM( valoresEjecutado ))/ SUM( valoresPresupuestado ))* 100,((
+                                        SUM( valoresEjecutado )- SUM( valoresPresupuestado ))/ SUM( valoresEjecutado ))* 100 
+                                ),
+                                2 
+                            ) AS incrementoPorcentual,
+                            unidadMedida AS unidades 
+                        FROM
+                            (
+                            SELECT
+                                id_labor,
+                                mes,
+                                anio,
+                                labor,
+                                valoresPresupuestado,
+                                0 AS valoresEjecutado,
+                                unidadMedida 
+                            FROM
+                                tb_presupuestado UNION ALL
+                            SELECT
+                                id_labor,
+                                mes,
+                                anio,
+                                labor,
+                                0,
+                                valoresEjecutado,
+                                unidadMedida 
+                            FROM
+                                tb_ejecutado 
+                            ) AS combined_data 
+                        GROUP BY
                             id_labor,
-                            mes, 
-                            anio, 
-                            labor as labores, 
-                            SUM(valoresPresupuestado) AS total_presupuestado, 
-                            SUM(valoresEjecutado) AS total_ejecutado,
-                            unidadMedida AS unidades
-                        FROM (
-                            SELECT id_labor, mes, anio, labor, valoresPresupuestado, NULL AS valoresEjecutado, unidadMedida
-                            FROM tb_presupuestado
-                            UNION ALL
-                            SELECT id_labor, mes, anio, labor, NULL, valoresEjecutado, unidadMedida
-                            FROM tb_ejecutado
-                        ) AS combined_data
-                        GROUP BY id_labor, mes, anio, labor";
-            mysqli_query($conexion, $query);
-
-        }
-        catch(Exception $e){
-            echo 'Message: ' .$e->getMessage();
-        }        
+                            mes,
+                            anio,
+                            labor";
+        mysqli_query($conexion, $query);
+    } catch (Exception $e) {
+        echo 'Message: ' . $e->getMessage();
+    }
 }
 
-function procesaControlPrespuestario($mesInicio,$mesFin,$anio,$campania){
-    
-        calculaEjecutado($mesInicio,$mesFin,$anio,$campania);
-        calculaPrespuestado($mesInicio,$mesFin,$anio,$campania);
-        calculaControlPrespuestario();
+function procesaControlPrespuestario($mesInicio, $mesFin, $campania)
+{
 
+    calculaEjecutado($mesInicio, $mesFin, $campania);
+    calculaPrespuestado($mesInicio, $mesFin, $campania);
+    calculaControlPrespuestario();
 }
 
-function reporteControlPresupuestario(){
+function reporteControlPresupuestario($datoWhere = '0')
+{
     global $conexion;
 
-    try {
+    try {        
+        switch ($datoWhere) {
+            case '0':
+                $where = '';
+                break;
+            
+            default:
+                $where = 'WHERE tb_control_presupuestario.id_labor = '.$datoWhere;
+                break;
+        }
+        
         $query = "SELECT
-                        tb_control_presupuestario.id_control_presupuestario AS id,
-                        tb_control_presupuestario.id_labor AS id_labor,
+                        tb_control_presupuestario.id_control_presupuestario AS id, 
                         tb_control_presupuestario.labores AS labores, 
                         tb_control_presupuestario.total_presupuestado AS total_presupuestado, 
                         tb_control_presupuestario.total_ejecutado AS total_ejecutado, 
-                        tb_control_presupuestario.unidades AS unidades
+                        tb_control_presupuestario.unidades AS unidades, 
+                        tb_control_presupuestario.diferencia AS diferencia, 
+                        tb_control_presupuestario.incrementoPorcentual AS porcentual
                     FROM
                         tb_control_presupuestario
+                    $where
                     ORDER BY
                         total_presupuestado DESC, 
                         labores ASC";
         $rs = mysqli_query($conexion, $query);
         $cantidad =  mysqli_num_rows($rs);
 
-        while ($datos = mysqli_fetch_array($rs)){
-            $id=$datos['id'];
-            $id_labor=$datos['id_labor'];
-            $labores=$datos['labores'];
-            $total_presupuestado=$datos['total_presupuestado'];
-            $total_ejecutado=$datos['total_ejecutado'];
-            $unidades=$datos['unidades'];
-            
+        while ($datos = mysqli_fetch_array($rs)) {
+            $id = $datos['id'];
+            $labores = $datos['labores'];
+            $total_presupuestado = $datos['total_presupuestado'];
+            $total_ejecutado = $datos['total_ejecutado'];
+            $unidades = $datos['unidades'];
+            $diferencia = $datos['diferencia'];
+            $porcentual = $datos['porcentual'];
+
             echo '<tr class="even pointer">
-              <td id="'.$id.'">'.$id_labor.'</td>
-              <td id="'.$id.'">'.$labores.'</td>
-              <td id="'.$id.'">'.$total_presupuestado.'</td>
-              <td id="'.$id.'">'.$total_ejecutado.'</td>
-              <td id="'.$id.'">'.$unidades.'</td>
+              <td id="' . $id . '">' . $labores . '</td>
+              <td id="' . $id . '">' . $total_presupuestado . '</td>
+              <td id="' . $id . '">' . $total_ejecutado . '</td>
+              <td id="' . $id . '">' . $unidades . '</td>
+              <td id="' . $id . '">' . $diferencia . '</td>
+              <td id="' . $id . '">' . $porcentual . '</td>
             </tr>';
         }
-        
+
         return $cantidad;
     } catch (Exception $e) {
         echo 'Message: ' . $e->getMessage();
     }
 }
 
-function reporteEjecutado($reporte = true){
+function reporteEjecutado($datoWhere = '0',$reporte = true)
+{
     global $conexion;
 
     try {
+        switch ($datoWhere) {
+            case '0':
+                $where = '';
+                break;
+            
+            default:
+                $where = 'WHERE tb_ejecutado.id_labor = '.$datoWhere;
+                break;
+        }
+
         $query = "SELECT
                     tb_ejecutado.id_ejecutado AS id, 
                     tb_ejecutado.id_labor AS id_labor, 
@@ -220,6 +250,7 @@ function reporteEjecutado($reporte = true){
                     tb_ejecutado.unidadMedida AS unidades
                 FROM
                     tb_ejecutado
+                $where
                 ORDER BY
                     tb_ejecutado.mes ASC";
         $rs = mysqli_query($conexion, $query);
@@ -245,7 +276,7 @@ function reporteEjecutado($reporte = true){
             </tr>';
             }
             return $cantidad;
-        }else{
+        } else {
             return $rs;
         }
     } catch (Exception $e) {
@@ -253,10 +284,21 @@ function reporteEjecutado($reporte = true){
     }
 }
 
-function reportePresupuestado($reporte = true){
+function reportePresupuestado($datoWhere = '0',$reporte = true)
+{
     global $conexion;
 
     try {
+        switch ($datoWhere) {
+            case '0':
+                $where = '';
+                break;
+            
+            default:
+                $where = 'WHERE tb_presupuestado.id_labor = '.$datoWhere;
+                break;
+        }
+
         $query = "SELECT
                     tb_presupuestado.id_presupuestado AS id, 
                     tb_presupuestado.id_labor AS id_labor, 
@@ -267,6 +309,7 @@ function reportePresupuestado($reporte = true){
                     tb_presupuestado.unidadMedida AS unidades
                 FROM
                     tb_presupuestado
+                $where
                 ORDER BY
                     tb_presupuestado.mes ASC";
         $rs = mysqli_query($conexion, $query);
@@ -299,5 +342,3 @@ function reportePresupuestado($reporte = true){
         echo 'Message: ' . $e->getMessage();
     }
 }
-
-?>

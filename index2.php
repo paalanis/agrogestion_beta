@@ -246,8 +246,8 @@ procesaControlPrespuestario();
                 </li>
                 <li><a><i class="fa fa-cog"></i> Presupuesto <span class="fa fa-chevron-down"></span></a>
                   <ul class="nav child_menu">
-                    <li><a class="menu" href="#" title="reporte_menu-controlPresupuestado">Control presupuestado</a></li>
-                    <li><a class="menu" href="#" title="reporte_menu-controlEjecutado">Control ejecutado</a></li>
+                    <li><a class="menu" href="#" title="reporte_menu-controlPresupuestado">Presupuesto</a></li>
+                    <li><a class="menu" href="#" title="reporte_menu-controlEjecutado">Ejecutado</a></li>
                     <li><a class="menu" href="#" title="reporte_menu-controlPresupuestario">Control presupuestario</a></li>
                     <!--<li><a class="menu" href="#" title="nuevo_presupuestoPeriodo">Periodo</a></li>-->
                   </ul>

@@ -1,12 +1,17 @@
 <?php
 session_start();
+include '../../conexion/conexion.php';
 include '../querys/presupuesto.php';
+$conexion = conectarServidor();
 
 $mes = $_REQUEST['dato_mes'];
 $campania = $_REQUEST['dato_campania'];
 $version = $_REQUEST['dato_version'];
+$labor = $_REQUEST['dato_labor'];
 
-procesaControlPrespuestario($mes,$mes,'2024',$campania);
+echo $labor;
+
+procesaControlPrespuestario($mes,$mes,$campania);
 
 ?>
 
@@ -21,11 +26,12 @@ procesaControlPrespuestario($mes,$mes,'2024',$campania);
         <table id="datatable-responsive" class="table table-striped table-bordered dt-responsive nowrap" cellspacing="0" width="100%">
           <thead>
             <tr>
-              <th>IdLabor </th>
               <th>Labor </th>
               <th>Presupuestado </th>
               <th>Ejecutado </th>
               <th>Unidad </th>
+              <th>Diferencia </th>
+              <th>% </th>
               </th>
             </tr>
           </thead>
@@ -33,8 +39,8 @@ procesaControlPrespuestario($mes,$mes,'2024',$campania);
           <tbody>
 
             <?php
-
-            $cantidad =  reporteControlPresupuestario();
+            
+            $cantidad =  reporteControlPresupuestario($labor);
             if ($cantidad > 0) { // si existen control con de esa finca se muestran, de lo contrario queda en blanco  
 
             ?>

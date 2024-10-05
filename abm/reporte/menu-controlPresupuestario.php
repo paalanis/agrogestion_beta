@@ -1,6 +1,9 @@
 <?php
 session_start();
+include '../../conexion/conexion.php';
+include '../querys/filtros.php';
 include '../querys/presupuesto.php';
+$conexion = conectarServidor();
 ?>
 
 
@@ -13,7 +16,7 @@ include '../querys/presupuesto.php';
 
         <div class="x_panel">
           <div class="x_title">
-            <h2>Control presupuestario <small>Compara presupuestado vs. ejecutado</small></h2>
+            <h2>Control presupuestario <small>Compara presupuesto vs. ejecutado</small></h2>
             <div class="clearfix"></div>
           </div>
 
@@ -23,10 +26,10 @@ include '../querys/presupuesto.php';
             <form class="form-horizontal" id="formulario_reporte" role="form" method="post" action="abm/reporte/excel_controlPresupuestario.php">
 
               <div class="well" style="overflow: auto">
-                <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="col-md-2 col-sm-4 col-xs-12">
                   <fieldset>
                     <select class="form-control col-md-7 col-xs-12" name="dato_mes" id="dato_mes">
-                      <option value="">Mes</option>
+                      <option value="0">Mes</option>
                       <option value="1">1</option>
                       <option value="2">2</option>
                       <option value="3">3</option>
@@ -43,10 +46,26 @@ include '../querys/presupuesto.php';
                   </fieldset>
                 </div>
 
-                <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="col-md-4 col-sm-3 col-xs-12">
+                  <fieldset>
+                    <select class="form-control col-md-7 col-xs-12" name="dato_labor" id="dato_labor">
+                      <option value="0">Labores</option>
+                      <?php
+                      $rslabores = queryLabores(false);
+                      while ($sql_labores = mysqli_fetch_array($rslabores)) {
+                        $idlabores = $sql_labores['id'];
+                        $labores = $sql_labores['nombre'];
+                        echo utf8_encode('<option value=' . $idlabores . '>' . $labores . '</option>');
+                      }
+                      ?>
+                    </select>
+                  </fieldset>
+                </div>
+
+                <div class="col-md-3 col-sm-4 col-xs-12">
                   <fieldset>
                     <select class="form-control col-md-7 col-xs-12" name="dato_campania" id="dato_campania">
-                      <option value="">Campaña</option>
+                      <option value="0">Campaña</option>
                       <?php
                       $rscampania = queryCampania();
                       while ($sql_campania = mysqli_fetch_array($rscampania)) {
@@ -59,10 +78,10 @@ include '../querys/presupuesto.php';
                   </fieldset>
                 </div>
 
-                <div class="col-md-4 col-sm-4 col-xs-12">
+                <div class="col-md-3 col-sm-4 col-xs-12">
                   <fieldset>
                     <select class="form-control col-md-7 col-xs-12" name="dato_version" id="dato_version">
-                      <option value="">Versión de Presupuesto</option>
+                      <option value="0">Versión de Presupuesto</option>
                       <option value="1">Original</option>
                       <option value="2">Ajustado</option>
                     </select>

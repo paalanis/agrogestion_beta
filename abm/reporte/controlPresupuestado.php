@@ -1,13 +1,16 @@
 <?php
 session_start();
+include '../../conexion/conexion.php';
 include '../querys/presupuesto.php';
+$conexion = conectarServidor();
 
 $mesInicio = $_REQUEST['dato_mesInicio'];
 $mesFin = $_REQUEST['dato_mesFin'];
 $campania = $_REQUEST['dato_campania'];
 $version = $_REQUEST['dato_version'];
+$labor = $_REQUEST['dato_labor'];
 
-calculaPrespuestado($mesInicio,$mesFin,'2024',$campania);
+calculaPrespuestado($mesInicio,$mesFin,$campania);
 
 ?>
 
@@ -36,7 +39,7 @@ calculaPrespuestado($mesInicio,$mesFin,'2024',$campania);
 
             <?php
 
-            $cantidad =  reportePresupuestado();
+            $cantidad =  reportePresupuestado($labor);
             if ($cantidad > 0) { // si existen control con de esa finca se muestran, de lo contrario queda en blanco  
 
             ?>
